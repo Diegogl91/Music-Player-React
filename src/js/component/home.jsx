@@ -1,86 +1,119 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 
 //include images into your bundle
-import rigoImage from "../../img/rigo-baby.jpg";
+const Player = () => {
+	const baseURL = "https://assets.breatheco.de/apis/sound/";
 
-//create your first component
-const useMultiAudio = urls => {
-	const [sources] = useState(
-		urls.map(url => {
-			return {
-				url,
-				audio: new Audio(url)
-			};
-		})
-	);
-
-	const [players, setPlayers] = useState(
-		urls.map(url => {
-			return {
-				url,
-				playing: false
-			};
-		})
-	);
-
-	const toggle = targetIndex => () => {
-		const newPlayers = [...players];
-		const currentIndex = players.findIndex(p => p.playing === true);
-		if (currentIndex !== -1 && currentIndex !== targetIndex) {
-			newPlayers[currentIndex].playing = false;
-			newPlayers[targetIndex].playing = true;
-		} else if (currentIndex !== -1) {
-			newPlayers[targetIndex].playing = false;
-		} else {
-			newPlayers[targetIndex].playing = true;
+	const [musica, setMusica] = useState([
+		{
+			id: 1,
+			category: "game",
+			name: "Mario Castle",
+			url: "files/mario/songs/castle.mp3"
+		},
+		{
+			id: 2,
+			category: "game",
+			name: "Mario Star",
+			url: "files/mario/songs/hurry-starman.mp3"
+		},
+		{
+			id: 3,
+			category: "game",
+			name: "Mario Overworld",
+			url: "files/mario/songs/overworld.mp3"
 		}
-		setPlayers(newPlayers);
+	]);
+	const [isPlaying, setIsPlaying] = useState(false);
+	let reproductorRef = useRef();
+
+	const playPause = () => {
+		if (!reproductorRef.src) {
+			reproductorRef.src = baseURL + musica[0].url;
+		}
+		if (isPlaying) {
+			reproductorRef.pause();
+			setIsPlaying(false);
+			console.log(isPlaying);
+		} else {
+			reproductorRef.play();
+			setIsPlaying(true);
+			console.log(isPlaying);
+		}
 	};
 
-	useEffect(() => {
-		sources.forEach((source, i) => {
-			players[i].playing ? source.audio.play() : source.audio.pause();
-		});
-	}, [sources, players]);
+	const newSong = index => {
+		setIndice(index);
+		reproductorRef.src = baseURL + musica[index].url;
+		reproductorRef.play();
+		setIsPlaying(true);
+	};
 
-	useEffect(() => {
-		sources.forEach((source, i) => {
-			source.audio.addEventListener("ended", () => {
-				const newPlayers = [...players];
-				newPlayers[i].playing = false;
-				setPlayers(newPlayers);
-			});
-		});
-		return () => {
-			sources.forEach((source, i) => {
-				source.audio.removeEventListener("ended", () => {
-					const newPlayers = [...players];
-					newPlayers[i].playing = false;
-					setPlayers(newPlayers);
-				});
-			});
-		};
-	}, []);
+	const [indice, setIndice] = useState(1);
 
-	return [players, toggle];
-};
+	const nextSong = () => {
+		if (indice + 1 >= musica.length) {
+			setIndice(0);
+			console.log(indice);
+		} else {
+			setIndice(indice + 1);
+		}
+		reproductorRef.src = baseURL + musica[indice].url;
+		reproductorRef.play();
+	};
 
-const MultiPlayer = ({ urls }) => {
-	const [players, toggle] = useMultiAudio(urls);
+	const prevSong = () => {
+		if (indice - 1 <= 0) {
+			setIndice(musica.length + 1);
+		} else {
+			setIndice(indice - 1);
+		}
+		reproductorRef.src = baseURL + musica[indice].url;
+		reproductorRef.play();
+	};
 
 	return (
-		<div>
-			{players.map((player, i) => (
-				<Player key={i} player={player} toggle={toggle(i)} />
-			))}
-		</div>
+		<>
+			<div className="playlist">
+				<ul>
+					{musica.map((song, index) => {
+						return (
+							<li key={index}>
+								<a
+									role="button"
+									onClick={() => {
+										newSong(index);
+									}}>
+									{song.name}
+								</a>
+							</li>
+						);
+					})}
+				</ul>
+			</div>
+			<div>
+				<audio ref={ele => (reproductorRef = ele)}></audio>
+				<button
+					onClick={() => {
+						prevSong();
+					}}>
+					Atras
+				</button>
+				<button
+					onClick={() => {
+						playPause();
+					}}>
+					Play
+				</button>
+				<button
+					onClick={() => {
+						nextSong();
+					}}>
+					Adelante
+				</button>
+			</div>
+		</>
 	);
 };
 
-const Player = ({ player, toggle }) => (
-	<div>
-		<p>Stream URL: {player.url}</p>
-		<button onClick={toggle}>{player.playing ? "Pause" : "Play"}</button>
-	</div>
-);
-export default MultiPlayer;
+export default Player;

@@ -9,6 +9,6 @@ import "bootstrap";
 import "../styles/index.scss";
 
 //import your own components
-import App from "./component/App.jsx";
+import Player from "./component/home.jsx";
 
-ReactDOM.render(<App />, document.querySelector("#app"));
+ReactDOM.render(<Player />, document.querySelector("#app"));
